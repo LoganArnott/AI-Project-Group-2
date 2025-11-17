@@ -78,15 +78,16 @@ public class AStar
             // Reached the end and creates a path out of all the quickest nodes to the end
             if(openList[shortestF] == End)
             {
-                List<Node> Path = new List<Node>();
+                List<Node> path = new List<Node>();
                 Node temp = current;
-                Path.Add(temp);
+                path.Add(temp);
                 while(temp.parent != null)
                 {
-                    Path.Add(temp.parent);
+                    path.Add(temp.parent);
                     temp = temp.parent;
                 }
-                return Path;
+                path.Reverse();
+                return path;
             }
 
             openList.Remove(current); // Removes searched node
@@ -109,6 +110,7 @@ public class AStar
                         {
                              n.H = Heuristic(n, End);
                         }
+                        n.F = n.G + n.H;
                         n.parent = current;
 
                         if(!openList.Contains(n))

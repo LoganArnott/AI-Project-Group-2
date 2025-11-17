@@ -103,7 +103,7 @@ public class GridManager : MonoBehaviour
             if(roadPath == null || roadPath.Count == 0)
             {
                 // Calls the A* algorithm
-                roadPath = astar.CreatePath(nodes, end, start);
+                roadPath = astar.CreatePath(nodes, start, end);
             }
         }
     }
