@@ -14,6 +14,7 @@ public class GridManager : MonoBehaviour
     Vector2Int start;
     Vector2Int end;
     public List<GameObject> waypointList = new List<GameObject>();
+    public float speed = 5;
 
     // Start is called before the first frame update
     void Start()
@@ -27,8 +28,8 @@ public class GridManager : MonoBehaviour
         // Creates instance of A*
         astar = new AStar(nodes, bounds.size.x, bounds.size.y);
 
-        start = new Vector2Int((int)transform.position.x, (int)transform.position.z);
-        end = new Vector2Int((int)waypointList[0].transform.position.x, (int)waypointList[0].transform.position.z);
+        start = new Vector2Int(Mathf.RoundToInt(transform.position.x), Mathf.RoundToInt(transform.position.z));
+        end = new Vector2Int(Mathf.RoundToInt(waypointList[0].transform.position.x), Mathf.RoundToInt(waypointList[0].transform.position.z));
     }
 
     // Creates grid
@@ -56,11 +57,10 @@ public class GridManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        // Debug.Log(Vector2.Distance(new Vector2(transform.position.x, transform.position.y), new Vector2((int)waypointList[0].transform.position.x, (int)waypointList[0].transform.position.z)));
         if(roadPath != null && roadPath.Count > 0 && waypointList.Count > 0)
         {
             // Move towards the next node
-            transform.position = Vector3.MoveTowards(transform.position, new Vector3(roadPath[0].X, this.transform.position.y, roadPath[0].Y), 12 * Time.deltaTime);
+            transform.position = Vector3.MoveTowards(transform.position, new Vector3(roadPath[0].X, this.transform.position.y, roadPath[0].Y), speed * Time.deltaTime);
 
             Vector3 temp = new Vector3(roadPath[0].X, this.transform.position.y, roadPath[0].Y);
 
@@ -70,7 +70,7 @@ public class GridManager : MonoBehaviour
                 start = new Vector2Int(roadPath[0].X, roadPath[0].Y);
                 roadPath.RemoveAt(0);
             }
-            if(Vector2.Distance(new Vector2(transform.position.x, transform.position.z), new Vector2((int)waypointList[0].transform.position.x, (int)waypointList[0].transform.position.z)) < 0.1f)
+            if(Vector2.Distance(new Vector2(transform.position.x, transform.position.z), new Vector2(Mathf.RoundToInt(waypointList[0].transform.position.x), Mathf.RoundToInt(waypointList[0].transform.position.z))) < 0.1f)
             {
                 if(waypointList[0].transform.position.y > 5)
                 {
@@ -90,10 +90,10 @@ public class GridManager : MonoBehaviour
                 {
                     waypointList.RemoveAt(0);
                 }
-                start = new Vector2Int((int)transform.position.x, (int)transform.position.z);
+                start = new Vector2Int(Mathf.RoundToInt(transform.position.x), Mathf.RoundToInt(transform.position.z));
                 if(waypointList.Count > 0)
                 {
-                    end = new Vector2Int((int)waypointList[0].transform.position.x, (int)waypointList[0].transform.position.z);
+                    end = new Vector2Int(Mathf.RoundToInt(waypointList[0].transform.position.x), Mathf.RoundToInt(waypointList[0].transform.position.z));
                 }
                 roadPath.Clear();
             }
