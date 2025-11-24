@@ -7,6 +7,7 @@ public enum Behaviors {Idle, Attack, SwitchTarget};
 
 public class SingleAgent : MonoBehaviour
 {
+    // Finite state machine variables
     public Behaviors aiBehaviors = Behaviors.Idle;
     RadiusDetection childScript;
     GameObject target;
@@ -16,19 +17,20 @@ public class SingleAgent : MonoBehaviour
     public Vector3Int[,] nodes;
     AStar astar;
     List<Node> roadPath = new List<Node>();
-    new Camera camera;
     BoundsInt bounds;
+    Vector2Int startPos;
     Vector2Int start;
     Vector2Int end;
     public float speed = 20;
     bool attackingCoroutine = true;
-    Vector2Int startPos;
     bool idleMove = true;
+    public float waitSeconds = 0.2f;
 
     // Start is called before the first frame update
     void Start()
     {
         startPos = new Vector2Int(Mathf.RoundToInt(transform.position.x), Mathf.RoundToInt(transform.position.z));
+        // Gets script from its child
         childScript = GetComponentInChildren<RadiusDetection>();
 
         // Shrink bounds down to where there are tiles
@@ -47,6 +49,7 @@ public class SingleAgent : MonoBehaviour
         RunBehaviors();
     }
 
+    // Switch statement for behaviors
     void RunBehaviors()
 	{
 		switch(aiBehaviors)
@@ -63,6 +66,7 @@ public class SingleAgent : MonoBehaviour
 		}
 	}
 
+    // Changes behavior in enum
     void ChangeBehavior(Behaviors newBehavior)
 	{
 		aiBehaviors = newBehavior;
@@ -70,15 +74,20 @@ public class SingleAgent : MonoBehaviour
 		RunBehaviors();
 	}
 
+    // Return to startPos and wait until racer enters radius
     void Idle()
     {
         start = new Vector2Int(Mathf.RoundToInt(transform.position.x), Mathf.RoundToInt(transform.position.z));
         end = startPos;
+
+        // Reset A* pathing once
         if(idleMove)
         {
+            attackingCoroutine = true;
             StartCoroutine(ResetAStarTarget());
             StopCoroutine(ResetAStarTarget());
             idleMove = false;
+            attackingCoroutine = false;
         }
         Movement();
 
@@ -86,32 +95,53 @@ public class SingleAgent : MonoBehaviour
         if(childScript.racersInRadius.Count > 0)
         {
             target = childScript.racersInRadius[0];
+            if(roadPath != null)
+            {
+                roadPath.Clear();
+            }
+            attackingCoroutine = true;
             StartCoroutine(ResetAStarTarget());
             ChangeBehavior(Behaviors.Attack);
         }
     }
 
+    // A* path to first racer to enter radius
     void Attack()
     {
-        // transform.position = Vector3.MoveTowards(transform.position, new Vector3(target.transform.position.x, this.transform.position.y, target.transform.position.z), 5 * Time.deltaTime);
         start = new Vector2Int(Mathf.RoundToInt(transform.position.x), Mathf.RoundToInt(transform.position.z));
         end = new Vector2Int(Mathf.RoundToInt(target.transform.position.x), Mathf.RoundToInt(target.transform.position.z));
         Movement();
+
+        // No racers in radius
         if(childScript.racersInRadius.Count == 0)
         {
             StopCoroutine(ResetAStarTarget());
+            if(roadPath != null)
+            {
+                roadPath.Clear();
+            }
             idleMove = true;
+            attackingCoroutine = false;
             ChangeBehavior(Behaviors.Idle);
+        }
+        else
+        {
+            // Always target most recent racer in radius (if first racer exits radius, it'll target the second racer who entered the radius)
+            target = childScript.racersInRadius[0];
         }
     }
 
+    // If it touches a racer, target another racer
     void SwitchTarget()
     {
         childScript.racersInRadius.RemoveAt(0);
+
+        // If no more racers in radius switch to idle
         if(childScript.racersInRadius.Count == 0)
         {
             StopCoroutine(ResetAStarTarget());
             idleMove = true;
+            attackingCoroutine = false;
             ChangeBehavior(Behaviors.Idle);
         }
         else
@@ -120,9 +150,9 @@ public class SingleAgent : MonoBehaviour
         }
     }
 
+    // If single agent touches a racer
     void OnTriggerEnter(Collider col)
     {
-        // Send message slow down
         if(col.gameObject == target)
         {
             ChangeBehavior(Behaviors.SwitchTarget);
@@ -151,6 +181,7 @@ public class SingleAgent : MonoBehaviour
         }
     }
 
+    // Movement method that uses A*
     void Movement()
     {
         if(roadPath != null && roadPath.Count > 0)
@@ -163,16 +194,12 @@ public class SingleAgent : MonoBehaviour
             // Switches to next node on path
             if(Vector3.Distance(transform.position, temp) < 0.1f)
             {
-                // start = new Vector2Int(roadPath[0].X, roadPath[0].Y);
                 roadPath.RemoveAt(0);
-            }
-            if(Vector2.Distance(new Vector2(transform.position.x, transform.position.z), new Vector2(Mathf.RoundToInt(target.transform.position.x), Mathf.RoundToInt(target.transform.position.z))) < 0.1f)
-            {
-                roadPath.Clear();
             }
         }
     }
 
+    // Coroutine to reset A* path every "waitSeconds" seconds which allow single agent to keep pathing towards racer
     IEnumerator ResetAStarTarget()
     {
         while(attackingCoroutine)
@@ -182,7 +209,7 @@ public class SingleAgent : MonoBehaviour
                 roadPath.Clear();
             }
             roadPath = astar.CreatePath(nodes, start, end);
-            yield return new WaitForSeconds(.2f);
+            yield return new WaitForSeconds(waitSeconds);
         }
     }
 }

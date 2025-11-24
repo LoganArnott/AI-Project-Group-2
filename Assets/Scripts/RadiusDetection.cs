@@ -8,18 +8,7 @@ public class RadiusDetection : MonoBehaviour
     Vector3 destination;
 	float distance;
 
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
-
+    // Racer enters radius
     void OnTriggerEnter(Collider col)
     {
         if(col.gameObject.tag == "Racer")
@@ -28,6 +17,7 @@ public class RadiusDetection : MonoBehaviour
         }
     }
 
+    // Racer exits radius
     void OnTriggerExit(Collider col)
     {
         if(col.gameObject.tag == "Racer")
