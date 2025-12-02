@@ -134,7 +134,10 @@ public class SingleAgent : MonoBehaviour
     // If it touches a racer, target another racer
     void SwitchTarget()
     {
-        childScript.racersInRadius.RemoveAt(0);
+        if(childScript.racersInRadius.Count > 0)
+        {
+            childScript.racersInRadius.RemoveAt(0);
+        }
 
         // If no more racers in radius switch to idle
         if(childScript.racersInRadius.Count == 0)
